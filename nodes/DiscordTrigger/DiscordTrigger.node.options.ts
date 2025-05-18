@@ -13,6 +13,11 @@ export const options: INodeProperties[] = [
         description: 'When a message is sent in the selected channels',
       },
       {
+        name: 'Direct Message',
+        value: 'direct-message',
+        description: 'When a direct message is sent to the bot',
+      },
+      {
 				name: 'Reaction Add',
 				value: 'message-reaction-add',
 				description: 'When a reaction is added to a message on the server',
@@ -122,7 +127,7 @@ export const options: INodeProperties[] = [
     type: 'options',
     displayOptions: {
       show: {
-        type: ['message'],
+        type: ['message', 'direct-message'],
       },
     },
     options: [
@@ -130,7 +135,7 @@ export const options: INodeProperties[] = [
         name: 'Bot Mention',
         value: 'botMention',
         description: 'The bot has to be mentioned somewhere in the message in order to trigger',
-      }, 
+      },
       {
         name: 'Contains',
         value: 'contain',
@@ -172,7 +177,7 @@ export const options: INodeProperties[] = [
     placeholder: 'e.g. !hello',
     displayOptions: {
       show: {
-        type: ['message'],
+        type: ['message', 'direct-message'],
         pattern: ['equal', 'start', 'contain', 'end', 'regex'],
       },
     },
@@ -186,7 +191,7 @@ export const options: INodeProperties[] = [
     type: 'boolean',
     displayOptions: {
       show: {
-        type: ['message'],
+        type: ['message', 'direct-message'],
       },
     },
 
@@ -199,7 +204,7 @@ export const options: INodeProperties[] = [
     type: 'boolean',
     displayOptions: {
       show: {
-        type: ['message'],
+        type: ['message', 'direct-message'],
       },
     },
 
@@ -240,6 +245,6 @@ export const options: INodeProperties[] = [
         default: false,
         description: "Whether this node needs to have at least one attachment to be triggered",
       },
-    ],									
+    ],
   }
 ];

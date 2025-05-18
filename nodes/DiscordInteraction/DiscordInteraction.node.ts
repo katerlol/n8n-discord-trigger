@@ -7,6 +7,7 @@ import {
     type INodeParameters,
     INodeOutputConfiguration,
     NodeOperationError,
+    NodeConnectionType,
 } from 'n8n-workflow';
 import { options } from './DiscordInteraction.node.options';
 import ipc from 'node-ipc';
@@ -95,7 +96,7 @@ export class DiscordInteraction implements INodeType {
             name: 'Discord Interaction',
         },
         icon: 'file:discord-logo.svg',
-        inputs: ['main'],
+        inputs: [NodeConnectionType.Main],
         outputs: `={{(${configuredOutputs})($parameter)}}`,
         credentials: [
             {
@@ -145,7 +146,7 @@ export class DiscordInteraction implements INodeType {
         // fetch credentials
         const credentials = (await this.getCredentials('discordBotTriggerApi').catch((e) => e)) as any as ICredentials;
 
-        // create connection to bot. 
+        // create connection to bot.
         await connection(credentials).catch((e) => {
             console.log(e);
             if (this.getNodeParameter('type', 0) === 'confirm') {
@@ -159,7 +160,7 @@ export class DiscordInteraction implements INodeType {
 
         if (this.getNodeParameter('type', 0) === 'confirm') {
             const returnData: INodeExecutionData[][] = [[], [], []];
-            // create connection to bot. 
+            // create connection to bot.
             await connection(credentials).catch((e) => {
                 console.log(e);
                 returnData[2] = this.getInputData();
@@ -187,16 +188,16 @@ export class DiscordInteraction implements INodeType {
                 });
             });
             console.log(response);
-        
+
             if (response.confirmed === null)
                 returnData[2] = this.getInputData();
             else if(response.confirmed === true)
                 returnData[0] = this.getInputData();
-            else 
+            else
                 returnData[1] = this.getInputData();
 
             return returnData;
-            
+
         } else {
             const returnData: INodeExecutionData[] = [];
             // iterate over all nodes

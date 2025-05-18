@@ -36,7 +36,7 @@ To send, listen to messages, or fetch the list of channels or roles, you need to
 ## Operations
 
 With this node, you can:
-- Listen to Discord chat messages.
+- Listen to Discord chat messages (both server messages and direct messages).
 - React to messages with specific patterns or triggers.
 - Fetch lists of channels and roles.
 

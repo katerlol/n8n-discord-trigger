@@ -1,4 +1,3 @@
-
 import {
     Client, GatewayIntentBits, ChannelType, Guild,
     EmbedBuilder,
@@ -24,17 +23,19 @@ export default function () {
         intents: [
             GatewayIntentBits.Guilds,
             GatewayIntentBits.GuildMessages,
-            GatewayIntentBits.MessageContent,
             GatewayIntentBits.GuildMembers,
             GatewayIntentBits.GuildPresences,
-            GatewayIntentBits.GuildBans,
+            GatewayIntentBits.GuildModeration,
             GatewayIntentBits.GuildMessageReactions,
             GatewayIntentBits.GuildMessageTyping,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.DirectMessageReactions,
+            GatewayIntentBits.MessageContent,
         ],
         allowedMentions: {
             parse: ['roles', 'users', 'everyone'],
         },
-        partials: [Partials.Message, Partials.Channel, Partials.Reaction],
+        partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.User],
     });
 
     ipc.config.id = 'bot';
@@ -293,11 +294,16 @@ export default function () {
         let messageReference: Message | null = null;
         let messageRerenceFetched = !(message.reference);
 
-        // iterate through all nodes and see if we need to trigger some                
+        // iterate through all nodes and see if we need to trigger some
         for (const [nodeId, parameters] of Object.entries(settings.triggerNodes) as [string, any]) {
             try {
-                if ('message' !== parameters.type)
-                    continue;
+                // Check if this is a direct message or a regular message type
+                const isDirectMessage = message.channel.type === ChannelType.DM;
+
+                // Skip if this node doesn't match the message type
+                if (parameters.type === 'direct-message' && !isDirectMessage) continue;
+                if (parameters.type === 'message' && isDirectMessage) continue;
+                if (parameters.type !== 'message' && parameters.type !== 'direct-message') continue;
 
                 const pattern = parameters.pattern;
 
@@ -310,20 +316,22 @@ export default function () {
                 }
                 else if (message.author.id === message.client.user.id) continue;
 
+                // For guild messages, check guild ID filter (skip for direct messages)
+                if (!isDirectMessage && parameters.guildIds.length && message.guild && !parameters.guildIds.includes(message.guild.id))
+                    continue;
 
-                // check if executed by the proper role
-                const userRoles = message.member?.roles.cache.map((role: any) => role.id);
-                if (parameters.roleIds.length) {
+                // check if executed by the proper role (skip for direct messages)
+                const userRoles = !isDirectMessage ? message.member?.roles.cache.map((role: any) => role.id) : [];
+                if (!isDirectMessage && parameters.roleIds.length) {
                     const hasRole = parameters.roleIds.some((role: any) => userRoles?.includes(role));
                     if (!hasRole) continue;
                 }
 
-                // check if executed by the proper channel
-                if (parameters.channelIds.length) {
+                // check if executed by the proper channel (skip for direct messages)
+                if (!isDirectMessage && parameters.channelIds.length) {
                     const isInChannel = parameters.channelIds.some((channelId: any) => message.channel.id?.includes(channelId));
                     if (!isInChannel) continue;
                 }
-
 
                 // check if the message has to have a message that was responded to
                 if (parameters.messageReferenceRequired && !message.reference) {
@@ -367,7 +375,7 @@ export default function () {
                 if ((pattern === "botMention" && botMention) || reg.test(message.content)) {
                     // Emit the message data to n8n
 
-                    // message create Options 
+                    // message create Options
                     const messageCreateOptions : any = {
                         message,
                         messageReference,
@@ -376,13 +384,13 @@ export default function () {
                         author: message.author,
                         nodeId: nodeId,
                     }
-                    
+
                     // check attachments
                     if (onlyWithAttachments && !message.attachments) continue;
-                    
+
                     console.log("attachments", message.attachments);
                     messageCreateOptions.attachments = message.attachments;
-                    
+
                     ipc.server.emit(parameters.socket, 'messageCreate', messageCreateOptions);
                 }
 
